@@ -8,8 +8,6 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork
 {
     public abstract class Enumeration : IComparable
     {
-        private readonly int _value;
-        private readonly string _displayName;
 
         protected Enumeration()
         {
@@ -17,18 +15,22 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork
 
         protected Enumeration(int value, string displayName)
         {
-            _value = value;
-            _displayName = displayName;
+            Id = value;
+            Value = value;
+            DisplayName = displayName;
         }
+
+        public int Id { get; set; }
+
 
         public int Value
         {
-            get { return _value; }
+            get; set;
         }
 
         public string DisplayName
         {
-            get { return _displayName; }
+            get;set;
         }
 
         public override string ToString()
@@ -62,14 +64,14 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork
             }
 
             var typeMatches = GetType().Equals(obj.GetType());
-            var valueMatches = _value.Equals(otherValue.Value);
+            var valueMatches = Value.Equals(otherValue.Value);
 
             return typeMatches && valueMatches;
         }
 
         public override int GetHashCode()
         {
-            return _value.GetHashCode();
+            return Value.GetHashCode();
         }
 
         public static int AbsoluteDifference(Enumeration firstValue, Enumeration secondValue)

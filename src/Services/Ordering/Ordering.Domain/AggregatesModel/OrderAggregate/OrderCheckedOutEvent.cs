@@ -9,7 +9,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
 {
     public struct ProductItem
     {
-        public int ProductId;
+        public Guid ProductId;
         public int Units;     
     }
          

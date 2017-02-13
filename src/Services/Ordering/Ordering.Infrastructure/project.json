@@ -1,14 +1,25 @@
-﻿{
+{
   "version": "1.0.0-*",
 
   "dependencies": {
     "NETStandard.Library": "1.6.1",
     "Microsoft.EntityFrameworkCore": "1.1.0",
     "Microsoft.EntityFrameworkCore.SqlServer": "1.1.0",
-    "Ordering.Domain": "1.0.0-*"
+    "Ordering.Domain": "1.0.0-*",
+    "Microsoft.EntityFrameworkCore.Tools": {
+      "type": "build",
+      "version": "1.1.0-preview4-final"
+    }
   },
-
+  "tools": {
+    "Microsoft.EntityFrameworkCore.Tools.DotNet": "1.1.0-preview4-final",
+    "Microsoft.AspNetCore.Server.IISIntegration.Tools": "1.0.0-preview2-final"
+  },
   "frameworks": {
+    "net461": {
+      "dependencies": {
+      }
+    },
     "netstandard1.6.1": {
       "imports": "dnxcore50"
     }

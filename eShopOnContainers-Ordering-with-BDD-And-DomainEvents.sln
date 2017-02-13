@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ordering.Domain.SpecFlowTes
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Ordering.Domain.SpecFlowTests", "test\Services\Specflow\Ordering.Domain.SpecFlowTests\Ordering.Domain.SpecFlowTests.xproj", "{B26DC82D-DF30-4774-ABE6-E17B18FEDFFA}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Ordering.Infrastructure", "src\Services\Ordering\Ordering.Infrastructure\Ordering.Infrastructure.xproj", "{95F1F07C-4D92-4742-BD07-E5B805AAB651}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.xproj", "{BC036D50-8546-4C23-99D5-4C7FA8688BC3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{B26DC82D-DF30-4774-ABE6-E17B18FEDFFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B26DC82D-DF30-4774-ABE6-E17B18FEDFFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B26DC82D-DF30-4774-ABE6-E17B18FEDFFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95F1F07C-4D92-4742-BD07-E5B805AAB651}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95F1F07C-4D92-4742-BD07-E5B805AAB651}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95F1F07C-4D92-4742-BD07-E5B805AAB651}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95F1F07C-4D92-4742-BD07-E5B805AAB651}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC036D50-8546-4C23-99D5-4C7FA8688BC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC036D50-8546-4C23-99D5-4C7FA8688BC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC036D50-8546-4C23-99D5-4C7FA8688BC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC036D50-8546-4C23-99D5-4C7FA8688BC3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

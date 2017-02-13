@@ -22,7 +22,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.B
             {
                 throw new ArgumentNullException(nameof(identity));
             }
-
+            
             FullName = identity;
 
             _paymentMethods = new HashSet<PaymentMethod>();

@@ -19,7 +19,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
         private DateTime _orderDate;
 
         public Buyer Buyer { get; private set; }
-        int _buyerId;
+        Guid _buyerId;
 
         public OrderStatusType OrderStatus { get; private set; }
 
@@ -27,11 +27,11 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
         public IEnumerable<OrderItem> OrderItems => _orderItems.ToList().AsEnumerable();
 
         public PaymentMethod PaymentMethod { get; private set; }
-        int _paymentMethodId;
+        Guid _paymentMethodId;
 
         protected Order() { }
 
-        public Order(int buyerId, int paymentMethodId, Address address)
+        public Order(Guid buyerId, Guid paymentMethodId, Address address)
         {
             _buyerId = buyerId;
             _paymentMethodId = paymentMethodId;
@@ -53,7 +53,17 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
             OrderStatus = OrderStatusType.CheckedOut;
         }
 
-        public void AddOrderItem(int productId, string productName, decimal unitPrice, decimal discount, string pictureUrl, int units = 1)
+        public void RemoveOrderItem(Guid productId)
+        {
+            var existingOrderForProduct = _orderItems.Where(o => o.ProductId == productId)
+                .SingleOrDefault();
+            if (existingOrderForProduct != null)
+            {
+                _orderItems.Remove(existingOrderForProduct);
+            }
+        }
+
+        public void AddOrderItem(Guid productId, string productName, decimal unitPrice, decimal discount, string pictureUrl, int units = 1)
         {
             var existingOrderForProduct = _orderItems.Where(o => o.ProductId == productId)
                 .SingleOrDefault();

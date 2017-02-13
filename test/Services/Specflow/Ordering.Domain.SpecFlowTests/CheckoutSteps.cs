@@ -18,9 +18,9 @@ namespace Shopping.Domain.SpecFlowTests
         }
 
         [Given(@"An order with (.*) units of a given product \(id (.*)\)")]
-        public void GivenAnOrderWithUnitsOfAGivenProductId(int units, int productId)
+        public void GivenAnOrderWithUnitsOfAGivenProductId(int units, Guid productId)
         {
-            _order = new Order(1, 1, new Address("", "", "", "", ""));
+            _order = new Order(Guid.Empty, Guid.Empty, new Address("", "", "", "", ""));
             _order.AddOrderItem(productId, "", 100, 0, "", units);
         }
         
@@ -31,7 +31,7 @@ namespace Shopping.Domain.SpecFlowTests
         }
 
         [Then(@"a checkedOut event should be emited indicating that (.*) units of product \(id (.*)\) are pending to be processed")]
-        public void ThenACheckedOutEventShouldBeEmitedIndicatingThatUnitsOfProductIdArePendingToBeProcessed(int units, int productId)
+        public void ThenACheckedOutEventShouldBeEmitedIndicatingThatUnitsOfProductIdArePendingToBeProcessed(int units, Guid productId)
         {
             Assert.IsNotNull(receivedEvent);
             Assert.AreEqual("Order", receivedEvent.AggregateSource);

@@ -5,6 +5,7 @@ using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.Buyer
 using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 using Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
 using System;
+using System.Text;
 
 namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 {
@@ -24,9 +25,13 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 
         public DbSet<CardType> CardTypes { get; set; }
 
-        public DbSet<OrderStatus> OrderStatus { get; set; }
+        public DbSet<OrderStatusType> OrderStatus { get; set; }
 
-        public OrderingContext(DbContextOptions options) : base(options) { }
+
+        public OrderingContext(DbContextOptions options) : base(options)
+        {
+          
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,7 +40,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
             modelBuilder.Entity<Order>(ConfigureOrder);
             modelBuilder.Entity<OrderItem>(ConfigureOrderItems);
             modelBuilder.Entity<CardType>(ConfigureCardTypes);
-            modelBuilder.Entity<OrderStatus>(ConfigureOrderStatus);
+            modelBuilder.Entity<OrderStatusType>(ConfigureOrderStatus);
         }
 
         void ConfigureBuyer(EntityTypeBuilder<Buyer> buyerConfiguration)
@@ -44,20 +49,15 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 
             buyerConfiguration.HasKey(b => b.Id);
 
-            buyerConfiguration.Property(b => b.Id)
-                .ForSqlServerUseSequenceHiLo("buyerseq", DEFAULT_SCHEMA);
+            buyerConfiguration.Property(b => b.Id);
+                //.ForSqlServerUseSequenceHiLo("buyerseq", DEFAULT_SCHEMA);
 
             buyerConfiguration.Property(b=>b.FullName)
                 .HasMaxLength(200)
                 .IsRequired();
 
             buyerConfiguration.HasIndex("FullName")
-              .IsUnique(true);
-
-            buyerConfiguration.HasMany(b => b.PaymentMethods)
-               .WithOne()
-               .HasForeignKey("BuyerId")
-               .OnDelete(DeleteBehavior.Cascade);
+              .IsUnique(false);
 
             var navigation = buyerConfiguration.Metadata.FindNavigation(nameof(Buyer.PaymentMethods));
 
@@ -70,10 +70,10 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 
             paymentConfiguration.HasKey(b => b.Id);
 
-            paymentConfiguration.Property(b => b.Id)
-                .ForSqlServerUseSequenceHiLo("paymentseq", DEFAULT_SCHEMA);
+            paymentConfiguration.Property(b => b.Id);
+                //.ForSqlServerUseSequenceHiLo("paymentseq", DEFAULT_SCHEMA);
 
-            paymentConfiguration.Property<int>("BuyerId")
+            paymentConfiguration.Property<Guid>("BuyerId")
                 .IsRequired();
 
             paymentConfiguration.Property<string>("CardHolderName")
@@ -105,8 +105,8 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 
             orderConfiguration.HasKey(o => o.Id);
 
-            orderConfiguration.Property(o => o.Id)
-                .ForSqlServerUseSequenceHiLo("orderseq", DEFAULT_SCHEMA);
+            orderConfiguration.Property(o => o.Id);
+                //.ForSqlServerUseSequenceHiLo("orderseq", DEFAULT_SCHEMA);
 
             orderConfiguration.Property<DateTime>("OrderDate").IsRequired();
             orderConfiguration.Property<string>("Street").IsRequired();
@@ -114,9 +114,9 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
             orderConfiguration.Property<string>("City").IsRequired();
             orderConfiguration.Property<string>("ZipCode").IsRequired();
             orderConfiguration.Property<string>("Country").IsRequired();
-            orderConfiguration.Property<int>("BuyerId").IsRequired();
+            orderConfiguration.Property<Guid>("BuyerId").IsRequired();
             orderConfiguration.Property<int>("OrderStatusId").IsRequired();
-            orderConfiguration.Property<int>("PaymentMethodId").IsRequired();
+            orderConfiguration.Property<Guid>("PaymentMethodId").IsRequired();
 
             var navigation = orderConfiguration.Metadata.FindNavigation(nameof(Order.OrderItems));
 
@@ -142,16 +142,16 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 
             orderItemConfiguration.HasKey(o => o.Id);
 
-            orderItemConfiguration.Property(o => o.Id)
-                .ForSqlServerUseSequenceHiLo("orderitemseq");
+            orderItemConfiguration.Property(o => o.Id);
+                //.ForSqlServerUseSequenceHiLo("orderitemseq");
 
-            orderItemConfiguration.Property<int>("OrderId")
+            orderItemConfiguration.Property<Guid>("OrderId")
                 .IsRequired();
 
             orderItemConfiguration.Property<decimal>("Discount")
                 .IsRequired();
 
-            orderItemConfiguration.Property<int>("ProductId")
+            orderItemConfiguration.Property<Guid>("ProductId")
                 .IsRequired();
 
             orderItemConfiguration.Property<string>("ProductName")
@@ -167,7 +167,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
                 .IsRequired(false);
         }
 
-        void ConfigureOrderStatus(EntityTypeBuilder<OrderStatus> orderStatusConfiguration)
+        void ConfigureOrderStatus(EntityTypeBuilder<OrderStatusType> orderStatusConfiguration)
         {
             orderStatusConfiguration.ToTable("orderstatus", DEFAULT_SCHEMA);
 
@@ -178,7 +178,11 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
                 .ValueGeneratedNever()
                 .IsRequired();
 
-            orderStatusConfiguration.Property(o => o.Name)
+            orderStatusConfiguration.Property(o => o.DisplayName)
+                 .HasMaxLength(200)
+                 .IsRequired();
+
+            orderStatusConfiguration.Property(o => o.Value)
                 .HasMaxLength(200)
                 .IsRequired();
         }
@@ -194,9 +198,15 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
                 .ValueGeneratedNever()
                 .IsRequired();
 
-            cardTypesConfiguration.Property(ct => ct.Name)
+            cardTypesConfiguration.Property(o => o.DisplayName)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            cardTypesConfiguration.Property(o => o.Value)
                 .HasMaxLength(200)
                 .IsRequired();
         }
+
+        
     }
 }

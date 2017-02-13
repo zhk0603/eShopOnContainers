@@ -8,16 +8,16 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
     {
         private string _productName;
         private string _pictureUrl;
-        private int _orderId;
+        private Guid _orderId;
         private decimal _unitPrice;
         private decimal _discount;
 
-        public int ProductId { get; private set; }
+        public Guid ProductId { get; private set; }
         public int Units { get; private set; }
 
         protected OrderItem() { }
 
-        public OrderItem(int productId, string productName, decimal unitPrice, decimal discount, string PictureUrl, int units = 1)
+        public OrderItem(Guid productId, string productName, decimal unitPrice, decimal discount, string PictureUrl, int units = 1)
         {
             if (units <= 0)
             {

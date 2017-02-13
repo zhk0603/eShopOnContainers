@@ -1,6 +1,7 @@
-﻿using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
+﻿using System;
+using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 using Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
-using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.Repositories
 {
@@ -29,8 +30,10 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.Repositor
 
         public Order Add(Order order)
         {
+            _context.Entry(order.OrderStatus).State = EntityState.Unchanged;
             return _context.Orders.Add(order)
                 .Entity;
         }
+
     }
 }
