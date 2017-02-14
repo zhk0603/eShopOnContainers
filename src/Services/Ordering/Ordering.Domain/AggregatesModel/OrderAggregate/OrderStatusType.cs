@@ -8,10 +8,14 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
 {
     public class OrderStatusType : Enumeration
     {
-        public static OrderStatusType Created
-        = new OrderStatusType(0, "Created");
-        public static OrderStatusType CheckedOut
-        = new OrderStatusType(1, "CheckedOut");
+        public static OrderStatusType Pending
+        = new OrderStatusType(0, "Pending");
+        public static OrderStatusType Processing
+        = new OrderStatusType(1, "Processing");
+        public static OrderStatusType Shipped
+        = new OrderStatusType(2, "Shipped");
+        public static OrderStatusType Delivered
+        = new OrderStatusType(3, "Delivered");
 
         private OrderStatusType() { }
         private OrderStatusType(int value, string displayName) : base(value, displayName) { }

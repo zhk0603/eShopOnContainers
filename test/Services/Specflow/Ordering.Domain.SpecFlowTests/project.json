@@ -12,7 +12,8 @@
     "dotnet-test-mstest": "1.1.1-preview",
     "MSTest.TestFramework": "1.0.4-preview",
     "SpecFlow.NetCore": "1.0.0-rc7",
-    "Ordering.Domain": "1.0.0-*"
+    "Ordering.Domain": "1.0.0-*",
+    "Ordering.Infrastructure": "1.0.0-*"
   },
 
   "tools": {

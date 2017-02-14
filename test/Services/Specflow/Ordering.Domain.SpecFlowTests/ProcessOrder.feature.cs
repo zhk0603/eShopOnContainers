@@ -18,7 +18,7 @@ namespace SpecFlow.GeneratedTests
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "2.1.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute()]
-    public partial class CheckoutFeature
+    public partial class ProcessOrderFeature
     {
         
         private static TechTalk.SpecFlow.ITestRunner testRunner;
@@ -27,7 +27,7 @@ namespace SpecFlow.GeneratedTests
         public static void FeatureSetup(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext testContext)
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunner(null, 0);
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Checkout", "\tOrder checkout process", ProgrammingLanguage.CSharp, ((string[])(null)));
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "ProcessOrder", "\tOrder life cycle", ProgrammingLanguage.CSharp, ((string[])(null)));
             testRunner.OnFeatureStart(featureInfo);
         }
         
@@ -42,9 +42,9 @@ namespace SpecFlow.GeneratedTests
         public virtual void TestInitialize()
         {
             if (((testRunner.FeatureContext != null) 
-                        && (testRunner.FeatureContext.FeatureInfo.Title != "Checkout")))
+                        && (testRunner.FeatureContext.FeatureInfo.Title != "ProcessOrder")))
             {
-                SpecFlow.GeneratedTests.CheckoutFeature.FeatureSetup(null);
+                SpecFlow.GeneratedTests.ProcessOrderFeature.FeatureSetup(null);
             }
         }
         
@@ -66,17 +66,17 @@ namespace SpecFlow.GeneratedTests
         
         [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute()]
 
-        [Microsoft.VisualStudio.TestTools.UnitTesting.TestPropertyAttribute("FeatureTitle", "Checkout")]
+        [Microsoft.VisualStudio.TestTools.UnitTesting.TestPropertyAttribute("FeatureTitle", "ProcessOrder")]
         [Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute("mytag")]
-        public virtual void WhenAnOrderIsCheckedOutAnEventShouldBePublished()
+        public virtual void WhenAnOrderIsProcessedAProcessingEventShouldBePublished()
         {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("When an order is checked out an event should be published", new string[] {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("When an order is processed a Processing event should be published", new string[] {
                         "mytag"});
             this.ScenarioSetup(scenarioInfo);
             testRunner.Given("An order with 2 units of a given product (id 1)", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-            testRunner.When("I check out the order", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-            testRunner.Then("a checkedOut event should be emited indicating that 2 units of product (id 1) are" +
-                    " pending to be processed", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+            testRunner.When("I process the order", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+            testRunner.Then("a processing event should be emited indicating that 2 units of product (id 1) are" +
+                    " being processed", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
             this.ScenarioCleanup();
         }
     }

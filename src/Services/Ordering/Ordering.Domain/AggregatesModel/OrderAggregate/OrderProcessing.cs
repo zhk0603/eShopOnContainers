@@ -13,9 +13,9 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
         public int Units;     
     }
          
-    public class OrderCheckedOutEvent : DomainEvent
+    public class OrderProcessing : DomainEvent
     {
-        public OrderCheckedOutEvent(IEnumerable<OrderItem> orderItems) : base("Order","1.0")
+        public OrderProcessing(IEnumerable<OrderItem> orderItems) : base("Order","1.0")
         {
             ProductIds = orderItems.Select( p => new ProductItem { ProductId = p.ProductId, Units = p.Units }).ToArray();
         }

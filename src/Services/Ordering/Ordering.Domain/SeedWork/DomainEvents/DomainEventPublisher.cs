@@ -5,25 +5,26 @@ using System.Threading.Tasks;
 
 namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork.Events
 {
-    public class DomainEventBus : IDomainEventBus
+    public class DomainEventPublisher : IDomainEvents
     {
         [ThreadStatic]
-        private static DomainEventBus _instance = null;
+        private static DomainEventPublisher _instance = null;
 
-        DomainEventBus()
+        DomainEventPublisher()
         {
             this.publishing = false;
         }
 
-        public static DomainEventBus Instance 
+        public static DomainEventPublisher Instance 
         {
             get
             {
                 if (_instance == null)
-                    _instance = new DomainEventBus();
+                    _instance = new DomainEventPublisher();
                 return _instance;
             }
         }
+
         bool publishing;
         List<IDomainEventSubscriber<IDomainEvent>> _subscribers;
         List<IDomainEventSubscriber<IDomainEvent>> Subscribers
@@ -42,6 +43,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork.Events
                 this._subscribers = value;
             }
         }
+
         public void Publish<T>(T domainEvent) where T : IDomainEvent
         {
             if (!this.publishing && this.HasSubscribers())
@@ -67,6 +69,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork.Events
                 }
             }
         }
+
         public void Reset()
         {
             if (!this.publishing)
@@ -74,6 +77,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork.Events
                 this.Subscribers = null;
             }
         }
+
         public void Subscribe(IDomainEventSubscriber<IDomainEvent> subscriber)
         {
             if (!this.publishing)
@@ -81,10 +85,12 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork.Events
                 this.Subscribers.Add(subscriber);
             }
         }
+
         public void Subscribe(Action<IDomainEvent> handle)
         {
             Subscribe(new DomainEventSubscriber<IDomainEvent>(handle));
         }
+
         bool HasSubscribers()
         {
             return this._subscribers != null && this.Subscribers.Count != 0;

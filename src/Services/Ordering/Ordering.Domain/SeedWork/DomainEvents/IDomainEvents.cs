@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.SeedWork.Events
 {
-    public interface IDomainEventBus
+    public interface IDomainEvents
     {
         void Publish<T>(T domainEvent) where T : IDomainEvent;
 

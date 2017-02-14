@@ -1,10 +1,15 @@
 ﻿namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork
 {
+    using SeedWork.Events;
     using System;
-
+    using System.Collections.Generic;
 
     public abstract class Entity
     {
+        public Entity()
+        {
+            Events = new List<IDomainEvent>();
+        }
 
         int? _requestedHashCode;
         Guid _Id;
@@ -20,6 +25,9 @@
                 _Id = value;
             }
         }
+
+        public ICollection<IDomainEvent> Events { get; private set; }
+
 
         public bool IsTransient()
         {

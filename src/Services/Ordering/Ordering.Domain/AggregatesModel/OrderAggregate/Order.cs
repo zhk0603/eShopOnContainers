@@ -43,14 +43,14 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
             _zipCode = address.ZipCode;
 
             _orderItems = new HashSet<OrderItem>();
-            OrderStatus = OrderStatusType.Created;
+            OrderStatus = OrderStatusType.Pending;
         }
 
-        public void CheckOut()
+        public void ProcessOrder()
         {
-            var domainEvent = new OrderCheckedOutEvent(OrderItems);
-            DomainEventBus.Instance.Publish<OrderCheckedOutEvent>( domainEvent );
-            OrderStatus = OrderStatusType.CheckedOut;
+            var domainEvent = new OrderProcessing(OrderItems);
+            Events.Add( domainEvent );
+            OrderStatus = OrderStatusType.Processing;
         }
 
         public void RemoveOrderItem(Guid productId)
