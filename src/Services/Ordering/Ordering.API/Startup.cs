@@ -3,6 +3,8 @@
     using AspNetCore.Http;
     using Autofac;
     using Autofac.Extensions.DependencyInjection;
+    using global::Ordering.API.Application.IntegrationEvents.Events;
+    using global::Ordering.API.Application.Sagas;
     using global::Ordering.API.Infrastructure.Middlewares;
     using Infrastructure;
     using Infrastructure.Auth;
@@ -12,6 +14,8 @@
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
+    using Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.HealthChecks;
@@ -96,6 +100,11 @@
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IIdentityService, IdentityService>();
 
+            // Integration Events
+            services.AddTransient<IIntegrationEventHandler<OrderPaidIntegrationEvent>, OrderingSaga>();
+            services.AddTransient<IIntegrationEventHandler<OrderStockProvidedIntegrationEvent>, OrderingSaga>();
+            services.AddSingleton<IEventBus>(provider => new EventBusRabbitMQ(Configuration["EventBusConnection"]));
+
             services.AddOptions();
 
             //configure autofac
@@ -124,6 +133,13 @@
 
             app.UseSwagger()
                 .UseSwaggerUi();
+
+            // Subscribe ordering.api to event bus
+            var orderPaidHandler = app.ApplicationServices.GetService<IIntegrationEventHandler<OrderPaidIntegrationEvent>>();
+            var orderStockProvidedHandler = app.ApplicationServices.GetService<IIntegrationEventHandler<OrderStockProvidedIntegrationEvent>>();
+            var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+            eventBus.Subscribe<OrderPaidIntegrationEvent>(orderPaidHandler);
+            eventBus.Subscribe<OrderStockProvidedIntegrationEvent>(orderStockProvidedHandler);
 
             OrderingContextSeed.SeedAsync(app).Wait();
         }
