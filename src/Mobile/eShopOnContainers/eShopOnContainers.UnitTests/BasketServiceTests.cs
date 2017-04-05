@@ -4,7 +4,7 @@ using Xunit;
 
 namespace eShopOnContainers.UnitTests
 {
-    public class BasketServiceTests
+    public class BasketServiceTests : BaseTest
     {
         [Fact]
         public async Task GetFakeBasketTest()

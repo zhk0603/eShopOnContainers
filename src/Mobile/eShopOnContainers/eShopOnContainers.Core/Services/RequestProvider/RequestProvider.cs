@@ -1,22 +1,24 @@
-﻿using eShopOnContainers.Core.Exceptions;
+﻿using Microsoft.eShopOnContainers.BuildingBlocks.Resilience.HttpResilience;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using System.Net;
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using System;
 
 namespace eShopOnContainers.Core.Services.RequestProvider
 {
     public class RequestProvider : IRequestProvider
     {
+        private readonly IHttpClient _httpClient;
         private readonly JsonSerializerSettings _serializerSettings;
 
-        public RequestProvider()
+        public RequestProvider(IHttpClient httpClient)
         {
+            _httpClient = httpClient;
+
             _serializerSettings = new JsonSerializerSettings
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -29,12 +31,8 @@ namespace eShopOnContainers.Core.Services.RequestProvider
 
         public async Task<TResult> GetAsync<TResult>(string uri, string token = "")
         {
-            HttpClient httpClient = CreateHttpClient(token);
-            HttpResponseMessage response = await httpClient.GetAsync(uri);
-
-            await HandleResponse(response);
-
-            string serialized = await response.Content.ReadAsStringAsync();
+            IHttpClient httpClient = GetHttpClientWithHeaders(token);
+            string serialized = await httpClient.GetStringAsync(uri);
 
             TResult result = await Task.Run(() => 
                 JsonConvert.DeserializeObject<TResult>(serialized, _serializerSettings));
@@ -44,19 +42,14 @@ namespace eShopOnContainers.Core.Services.RequestProvider
 
         public async Task<TResult> PostAsync<TResult>(string uri, TResult data, string token = "", string header = "")
         {
-            HttpClient httpClient = CreateHttpClient(token);
+            IHttpClient httpClient = GetHttpClientWithHeaders(token);
 
             if (!string.IsNullOrEmpty(header))
             {
-                AddHeaderParameter(httpClient, header);
+                AddHeaderParameter(httpClient.Inst, header);
             }
 
-            var content = new StringContent(JsonConvert.SerializeObject(data));
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-            HttpResponseMessage response = await httpClient.PostAsync(uri, content);
-
-            await HandleResponse(response);
-
+            HttpResponseMessage response = await httpClient.PostAsync(uri, data);
             string serialized = await response.Content.ReadAsStringAsync();
 
             TResult result = await Task.Run(() =>
@@ -72,30 +65,8 @@ namespace eShopOnContainers.Core.Services.RequestProvider
 
         public async Task<TResult> PostAsync<TRequest, TResult>(string uri, TRequest data, string token = "")
         {
-            HttpClient httpClient = CreateHttpClient(token);
-            string serialized = await Task.Run(() => JsonConvert.SerializeObject(data, _serializerSettings));
-            var content = new StringContent(serialized, Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await httpClient.PostAsync(uri, content);
-
-            await HandleResponse(response);
-
-            string responseData = await response.Content.ReadAsStringAsync();
-
-            return await Task.Run(() => JsonConvert.DeserializeObject<TResult>(responseData, _serializerSettings));
-        }
-
-        public Task<TResult> PutAsync<TResult>(string uri, TResult data, string token = "")
-        {
-            return PutAsync<TResult, TResult>(uri, data, token);
-        }
-
-        public async Task<TResult> PutAsync<TRequest, TResult>(string uri, TRequest data, string token = "")
-        {
-            HttpClient httpClient = CreateHttpClient(token);
-            string serialized = await Task.Run(() => JsonConvert.SerializeObject(data, _serializerSettings));
-            HttpResponseMessage response = await httpClient.PutAsync(uri, new StringContent(serialized, Encoding.UTF8, "application/json"));
-
-            await HandleResponse(response);
+            IHttpClient httpClient = GetHttpClientWithHeaders(token);
+            HttpResponseMessage response = await httpClient.PostAsync(uri, data);
 
             string responseData = await response.Content.ReadAsStringAsync();
 
@@ -104,14 +75,14 @@ namespace eShopOnContainers.Core.Services.RequestProvider
 
         public async Task DeleteAsync(string uri, string token = "")
         {
-            HttpClient httpClient = CreateHttpClient(token);
+            IHttpClient httpClient = GetHttpClientWithHeaders(token);
 
             await httpClient.DeleteAsync(uri);
         }
 
-        private HttpClient CreateHttpClient(string token = "")
+        private IHttpClient GetHttpClientWithHeaders(string token = "")
         {
-            var httpClient = new HttpClient();
+            var httpClient = _httpClient.Inst;
 
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -120,7 +91,7 @@ namespace eShopOnContainers.Core.Services.RequestProvider
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
-            return httpClient;
+            return _httpClient;
         }
 
         private void AddHeaderParameter(HttpClient httpClient, string parameter)
@@ -132,22 +103,6 @@ namespace eShopOnContainers.Core.Services.RequestProvider
                 return;
 
             httpClient.DefaultRequestHeaders.Add(parameter, Guid.NewGuid().ToString());
-        }
-
-        private async Task HandleResponse(HttpResponseMessage response)
-        {
-            if (!response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-
-                if (response.StatusCode == HttpStatusCode.Forbidden
-                    || response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    throw new ServiceAuthenticationException(content);
-                }
-
-                throw new HttpRequestException(content);
-            }
         }
     }
 }

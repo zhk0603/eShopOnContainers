@@ -2,7 +2,7 @@
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{F7B6A162-BC4D-4924-B16A-713F9B0344E7}</ProjectGuid>
@@ -13,8 +13,9 @@
     <DefaultLanguage>es-ES</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <TargetFrameworkProfile>Profile44</TargetFrameworkProfile>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,6 +35,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BaseTest.cs" />
     <Compile Include="BasketServiceTests.cs" />
     <Compile Include="CatalogServiceTests.cs" />
     <Compile Include="DummyTests.cs" />
@@ -41,28 +43,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="xunit.abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\xunit.abstractions.2.0.1\lib\netstandard1.0\xunit.abstractions.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="xunit.assert, Version=2.2.0.3444, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\xunit.assert.2.2.0-beta4-build3444\lib\netstandard1.0\xunit.assert.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="xunit.core, Version=2.2.0.3444, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\xunit.extensibility.core.2.2.0-beta4-build3444\lib\netstandard1.0\xunit.core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="xunit.execution.dotnet, Version=2.2.0.3444, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\xunit.extensibility.execution.2.2.0-beta4-build3444\lib\netstandard1.0\xunit.execution.dotnet.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
+    <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Resilience\HttpResilience\HttpResilience.csproj">
+      <Project>{5A2AF1B2-7398-46BB-802F-54E33DF77681}</Project>
+      <Name>HttpResilience</Name>
+    </ProjectReference>
     <ProjectReference Include="..\eShopOnContainers.Core\eShopOnContainers.Core.csproj">
       <Project>{67f9d3a8-f71e-4428-913f-c37ae82cdb24}</Project>
       <Name>eShopOnContainers.Core</Name>

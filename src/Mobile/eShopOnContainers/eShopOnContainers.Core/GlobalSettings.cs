@@ -6,6 +6,7 @@
         public const string MockTag = "Mock";
         public const string DefaultEndpoint = "http://13.88.8.119";
 
+        public const bool UseResilientHttp = true;
 
         private string _baseEndpoint;
         private static readonly GlobalSetting _instance = new GlobalSetting();

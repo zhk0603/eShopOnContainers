@@ -6,7 +6,7 @@ using Xunit;
 
 namespace eShopOnContainers.UnitTests
 {
-    public class OrdersServiceTests
+    public class OrdersServiceTests : BaseTest
     {
         [Fact]
         public async Task GetFakeOrdersTest()
@@ -20,8 +20,7 @@ namespace eShopOnContainers.UnitTests
         [Fact]
         public async Task GetOrdersTest()
         {
-            var requestProvider = new RequestProvider();
-            var ordersService = new OrderService(requestProvider);
+            var ordersService = new OrderService(RequestProvider);
             var result = await ordersService.GetOrdersAsync(GlobalSetting.Instance.AuthToken);
 
             Assert.NotEqual(0, result.Count);

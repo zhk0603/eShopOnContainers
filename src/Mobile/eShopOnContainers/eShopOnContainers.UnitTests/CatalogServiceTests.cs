@@ -5,7 +5,7 @@ using Xunit;
 
 namespace eShopOnContainers.UnitTests
 {
-    public class CatalogServiceTests
+    public class CatalogServiceTests : BaseTest
     {
         [Fact]
         public async Task GetFakeCatalogTest()
@@ -19,8 +19,7 @@ namespace eShopOnContainers.UnitTests
         [Fact]
         public async Task GetCatalogTest()
         {
-            var requestProvider = new RequestProvider();
-            var catalogService = new CatalogService(requestProvider);
+            var catalogService = new CatalogService(RequestProvider);
             var catalog = await catalogService.GetCatalogAsync();
 
             Assert.NotEqual(0, catalog.Count);
@@ -38,8 +37,7 @@ namespace eShopOnContainers.UnitTests
         [Fact]
         public async Task GetCatalogBrandTest()
         {
-            var requestProvider = new RequestProvider();
-            var catalogService = new CatalogService(requestProvider);
+            var catalogService = new CatalogService(RequestProvider);
             var catalogBrand = await catalogService.GetCatalogBrandAsync();
 
             Assert.NotEqual(0, catalogBrand.Count);
@@ -57,8 +55,7 @@ namespace eShopOnContainers.UnitTests
         [Fact]
         public async Task GetCatalogTypeTest()
         {
-            var requestProvider = new RequestProvider();
-            var catalogService = new CatalogService(requestProvider);
+            var catalogService = new CatalogService(RequestProvider);
             var catalogType = await catalogService.GetCatalogTypeAsync();
 
             Assert.NotEqual(0, catalogType.Count);

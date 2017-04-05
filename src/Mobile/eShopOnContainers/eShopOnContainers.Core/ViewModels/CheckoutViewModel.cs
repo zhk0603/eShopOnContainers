@@ -13,6 +13,7 @@ using eShopOnContainers.Core.Services.Order;
 using eShopOnContainers.Core.Helpers;
 using eShopOnContainers.Core.Services.User;
 using eShopOnContainers.Core.Models.User;
+using Polly.CircuitBreaker;
 
 namespace eShopOnContainers.Core.ViewModels
 {
@@ -149,6 +150,10 @@ namespace eShopOnContainers.Core.ViewModels
                 // Show Dialog
                 await DialogService.ShowAlertAsync("Order sent successfully!", string.Format("Order {0}", Order.OrderNumber), "Ok");
                 await NavigationService.RemoveLastFromBackStackAsync();
+            }
+            catch (BrokenCircuitException)
+            {
+                await DialogService.ShowAlertAsync("Not possible to create a new order, please try later on.", "Oops!", "Ok");
             }
             catch
             {
