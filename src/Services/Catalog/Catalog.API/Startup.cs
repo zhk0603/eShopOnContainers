@@ -21,6 +21,10 @@
     using System.Data.Common;
     using System.Reflection;
     using global::Catalog.API.IntegrationEvents;
+    using global::Catalog.API.Application.Commands;
+    using global::Catalog.API.Infrastructure.AutofacModules;
+    using Autofac;
+    using Autofac.Extensions.DependencyInjection;
 
     public class Startup
     {
@@ -43,7 +47,7 @@
             Configuration = builder.Build();
         }
 
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
             
@@ -97,12 +101,21 @@
                     .AllowCredentials());
             });
 
+            //Register Integration event service bus
             services.AddTransient<Func<DbConnection, IIntegrationEventLogService>>(
                 sp => (DbConnection c) => new IntegrationEventLogService(c));            
             var serviceProvider = services.BuildServiceProvider();
             var configuration = serviceProvider.GetRequiredService<IOptionsSnapshot<Settings>>().Value;
             services.AddTransient<ICatalogIntegrationEventService, CatalogIntegrationEventService>();
-            services.AddSingleton<IEventBus>(new EventBusRabbitMQ(configuration.EventBusConnection));            
+            services.AddSingleton<IEventBus>(new EventBusRabbitMQ(configuration.EventBusConnection));
+
+            //Autofac modules
+            var container = new ContainerBuilder();
+            container.Populate(services);
+            container.RegisterModule(new MediatorModule());
+
+            return new AutofacServiceProvider(container.Build());
+
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -131,6 +144,7 @@
                 new DbContextOptionsBuilder<IntegrationEventLogContext>()
                 .UseSqlServer(Configuration["ConnectionString"], b => b.MigrationsAssembly("Catalog.API"))
                 .Options);
+
             integrationEventLogContext.Database.Migrate();
         }
 

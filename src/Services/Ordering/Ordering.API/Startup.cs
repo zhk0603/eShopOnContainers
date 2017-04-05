@@ -111,7 +111,7 @@
 
             // Integration Events
             services.AddTransient<IIntegrationEventHandler<OrderPaidIntegrationEvent>, OrderingSaga>();
-            services.AddTransient<IIntegrationEventHandler<OrderStockProvidedIntegrationEvent>, OrderingSaga>();
+            services.AddTransient<IIntegrationEventHandler<StockCreatedIntegrationEvent>, OrderingSaga>();
 
 
             services.AddOptions();
@@ -145,10 +145,10 @@
 
             // Subscribe ordering.api to event bus
             var orderPaidHandler = app.ApplicationServices.GetService<IIntegrationEventHandler<OrderPaidIntegrationEvent>>();
-            var orderStockProvidedHandler = app.ApplicationServices.GetService<IIntegrationEventHandler<OrderStockProvidedIntegrationEvent>>();
+            var orderStockCreatedHandler = app.ApplicationServices.GetService<IIntegrationEventHandler<StockCreatedIntegrationEvent>>();
             var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
             eventBus.Subscribe<OrderPaidIntegrationEvent>(orderPaidHandler);
-            eventBus.Subscribe<OrderStockProvidedIntegrationEvent>(orderStockProvidedHandler);
+            eventBus.Subscribe<StockCreatedIntegrationEvent>(orderStockCreatedHandler);
 
             OrderingContextSeed.SeedAsync(app).Wait();
 

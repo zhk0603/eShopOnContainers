@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Catalog.API.Application.Commands;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.eShopOnContainers.Services.Catalog.API;
 using Microsoft.eShopOnContainers.Services.Catalog.API.Infrastructure;
 using Microsoft.Extensions.Options;
-using Microsoft.eShopOnContainers.BuildingBlocks.EventBus.Abstractions;
-using System.Data.Common;
-using Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Services;
-using Microsoft.eShopOnContainers.Services.Catalog.API;
-using Microsoft.EntityFrameworkCore;
-using Catalog.API.Application.Commands;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -21,15 +18,14 @@ namespace Catalog.API.Controllers
     {
         private readonly CatalogContext _catalogContext;
         private readonly IOptionsSnapshot<Settings> _settings;
-        private readonly IEventBus _eventBus;
-        private readonly Func<DbConnection, IIntegrationEventLogService> _integrationEventLogServiceFactory;
+        private readonly IMediator _mediator;
 
-        public StockController(CatalogContext Context, IOptionsSnapshot<Settings> settings, IEventBus eventBus, Func<DbConnection, IIntegrationEventLogService> integrationEventLogServiceFactory)
+        public StockController(
+            CatalogContext Context, IOptionsSnapshot<Settings> settings, IMediator mediator)
         {
             _catalogContext = Context;
             _settings = settings;
-            _eventBus = eventBus;
-            _integrationEventLogServiceFactory = integrationEventLogServiceFactory;
+            _mediator = mediator;
 
             ((DbContext)Context).ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
@@ -41,15 +37,9 @@ namespace Catalog.API.Controllers
             bool result = false;
             if (Guid.TryParse(requestId, out Guid guid) && guid != Guid.Empty)
             {
-                var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, bool>(command, guid);
-                result = await _mediator.SendAsync(requestCreateOrder);
-            }
-            else
-            {
-                // If no x-requestid header is found we process the order anyway. This is just temporary to not break existing clients
-                // that aren't still updated. When all clients were updated this could be removed.
-                result = await _mediator.SendAsync(command);
-            }
+                var requestCreateStock = new IdentifiedCommand<CreateStockCommand, bool>(command, guid);
+                result = await _mediator.SendAsync(requestCreateStock);
+            }            
 
             if (result)
             {
@@ -64,11 +54,18 @@ namespace Catalog.API.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateStock(int productId, int quantity)
         {
-            var productToUpdate = _catalogContext.CatalogItems.SingleOrDefault();
+            var productToUpdate = _catalogContext.CatalogItems
+                .Where(x => x.Id == productId).SingleOrDefault();
             productToUpdate.AddStock(quantity);
-            await _catalogContext.SaveChangesAsync();
+            _catalogContext.Update(productToUpdate);
+            var result = await _catalogContext.SaveChangesAsync();
 
-            return Ok();
+            if (result > 0)
+            {
+                return Ok();
+            }
+
+            return BadRequest();
         }        
         
     }
