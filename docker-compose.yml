@@ -81,9 +81,3 @@ services:
     build:
       context: ./src/Services/Payment/Payment.API
       dockerfile: Dockerfile
-
-  stock.api:
-    image: eshop/stock.api
-    build:
-      context: ./src/Services/Stock/Stock.API
-      dockerfile: Dockerfile
