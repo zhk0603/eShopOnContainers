@@ -8,9 +8,10 @@ using Microsoft.eShopOnContainers.Services.Ordering.Infrastructure;
 namespace Ordering.API.Migrations
 {
     [DbContext(typeof(OrderingContext))]
-    partial class OrderingContextModelSnapshot : ModelSnapshot
+    [Migration("20170403082405_NoBuyerPropertyInOrder")]
+    partial class NoBuyerPropertyInOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.0-rtm-22752")
@@ -196,26 +197,6 @@ namespace Ordering.API.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("requests","ordering");
-                });
-
-            modelBuilder.Entity("Ordering.Domain.SagaData.OrderSagaData", b =>
-                {
-                    b.Property<int>("CorrelationId")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Cancelled");
-
-                    b.Property<bool>("Completed");
-
-                    b.Property<bool>("IsPaymentDone");
-
-                    b.Property<bool>("IsStockProvided");
-
-                    b.Property<string>("Originator");
-
-                    b.HasKey("CorrelationId");
-
-                    b.ToTable("OrderSaga");
                 });
 
             modelBuilder.Entity("Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.BuyerAggregate.PaymentMethod", b =>

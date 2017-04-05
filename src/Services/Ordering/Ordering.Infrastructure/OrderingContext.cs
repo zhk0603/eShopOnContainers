@@ -164,7 +164,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            orderConfiguration.HasOne(o => o.Buyer)
+            orderConfiguration.HasOne<Buyer>()
                 .WithMany()
                 .IsRequired(false)
                 .HasForeignKey("BuyerId");
