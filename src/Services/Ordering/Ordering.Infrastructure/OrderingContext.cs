@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.BuyerAggregate;
 using Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.OrderAggregate;
 using Microsoft.eShopOnContainers.Services.Ordering.Domain.Seedwork;
+using Microsoft.eShopOnContainers.Services.Ordering.Infrastructure.Idempotency;
 using Ordering.Infrastructure;
 using System;
 using System.Threading;
@@ -34,7 +35,10 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 
         public OrderingContext(DbContextOptions options, IMediator mediator) : base(options)
         {
-            _mediator = mediator;
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+
+
+            System.Diagnostics.Debug.WriteLine("OrderingContext::ctor ->" + this.GetHashCode());
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -152,6 +156,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
             orderConfiguration.Property<int?>("BuyerId").IsRequired(false);
             orderConfiguration.Property<int>("OrderStatusId").IsRequired();
             orderConfiguration.Property<int?>("PaymentMethodId").IsRequired(false);
+            orderConfiguration.Property<string>("Description").IsRequired(false);
 
             var navigation = orderConfiguration.Metadata.FindNavigation(nameof(Order.OrderItems));
             // DDD Patterns comment:
@@ -251,7 +256,7 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Infrastructure
 
 
             // After executing this line all the changes (from the Command Handler and Domain Event Handlers) 
-            // performed thought the DbContext will be commited
+            // performed throught the DbContext will be commited
             var result = await base.SaveChangesAsync();
 
             return true;

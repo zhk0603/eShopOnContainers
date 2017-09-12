@@ -54,6 +54,18 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
             return _discount;
         }
 
+        public int GetUnits()
+        {
+            return _units;
+        }
+
+        public decimal GetUnitPrice()
+        {
+            return _unitPrice;
+        }
+
+        public string GetOrderItemProductName() => _productName;
+
         public void SetNewDiscount(decimal discount)
         {
             if (discount < 0)

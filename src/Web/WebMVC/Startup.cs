@@ -1,22 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.eShopOnContainers.WebMVC.ViewModels;
-using Microsoft.eShopOnContainers.WebMVC.Services;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Http;
-using System.Threading;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.HealthChecks;
+using Microsoft.eShopOnContainers.BuildingBlocks;
 using Microsoft.eShopOnContainers.BuildingBlocks.Resilience.Http;
 using Microsoft.eShopOnContainers.WebMVC.Infrastructure;
+using Microsoft.eShopOnContainers.WebMVC.Services;
+using Microsoft.eShopOnContainers.WebMVC.ViewModels;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.HealthChecks;
+using Microsoft.Extensions.Logging;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using WebMVC.Infrastructure;
 
 namespace Microsoft.eShopOnContainers.WebMVC
 {
@@ -33,7 +29,7 @@ namespace Microsoft.eShopOnContainers.WebMVC
             if (env.IsDevelopment())
             {
                 // For more details on using the user secret store see http://go.microsoft.com/fwlink/?LinkID=532709
-                builder.AddUserSecrets();
+                builder.AddUserSecrets<Startup>();
             }
 
             Configuration = builder.Build();
@@ -44,34 +40,52 @@ namespace Microsoft.eShopOnContainers.WebMVC
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddMvc();            
+            services.AddSession();
+
+            if (Configuration.GetValue<string>("IsClusterEnv") == bool.TrueString)
+            {
+                services.AddDataProtection(opts =>
+                {
+                    opts.ApplicationDiscriminator = "eshop.webmvc";
+                })
+                .PersistKeysToRedis(Configuration["DPConnectionString"]);
+            }
+
             services.Configure<AppSettings>(Configuration);
 
             services.AddHealthChecks(checks =>
             {
-                checks.AddUrlCheck(Configuration["CatalogUrl"]);
-                checks.AddUrlCheck(Configuration["OrderingUrl"]);
-                checks.AddUrlCheck(Configuration["BasketUrl"]);
-                checks.AddUrlCheck(Configuration["IdentityUrl"]);
+                var minutes = 1;
+                if (int.TryParse(Configuration["HealthCheck:Timeout"], out var minutesParsed))
+                {
+                    minutes = minutesParsed;
+                }
+                checks.AddUrlCheck(Configuration["CatalogUrl"] + "/hc", TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheck(Configuration["OrderingUrl"] + "/hc", TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheck(Configuration["BasketUrl"] + "/hc", TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheck(Configuration["IdentityUrl"] + "/hc", TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheck(Configuration["MarketingUrl"] + "/hc", TimeSpan.FromMinutes(minutes));
             });
 
             // Add application services.
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();            
-            services.AddTransient<ICatalogService, CatalogService>(); 
-            services.AddTransient<IOrderingService, OrderingService>(); 
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddTransient<ICatalogService, CatalogService>();
+            services.AddTransient<IOrderingService, OrderingService>();
             services.AddTransient<IBasketService, BasketService>();
+            services.AddTransient<ICampaignService, CampaignService>();
             services.AddTransient<IIdentityParser<ApplicationUser>, IdentityParser>();
 
             if (Configuration.GetValue<string>("UseResilientHttp") == bool.TrueString)
             {
-                services.AddTransient<IResilientHttpClientFactory, ResilientHttpClientFactory>();
-                services.AddTransient<IHttpClient, ResilientHttpClient>(sp => sp.GetService<IResilientHttpClientFactory>().CreateResilientHttpClient());
+                services.AddSingleton<IResilientHttpClientFactory, ResilientHttpClientFactory>();
+                services.AddSingleton<IHttpClient, ResilientHttpClient>(sp => sp.GetService<IResilientHttpClientFactory>().CreateResilientHttpClient());
             }
             else
             {
-                services.AddTransient<IHttpClient, StandardHttpClient>();
+                services.AddSingleton<IHttpClient, StandardHttpClient>();
             }
-        }        
+        }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -88,9 +102,10 @@ namespace Microsoft.eShopOnContainers.WebMVC
             }
             else
             {
-                app.UseExceptionHandler("/Catalog/Error");
+                app.UseExceptionHandler("/Error");
             }
 
+            app.UseSession();
             app.UseStaticFiles();
 
             app.UseCookieAuthentication(new CookieAuthenticationOptions
@@ -101,22 +116,26 @@ namespace Microsoft.eShopOnContainers.WebMVC
 
             var identityUrl = Configuration.GetValue<string>("IdentityUrl");
             var callBackUrl = Configuration.GetValue<string>("CallBackUrl");
+            var useLoadTest = Configuration.GetValue<bool>("UseLoadTest");
             var log = loggerFactory.CreateLogger("identity");
 
             var oidcOptions = new OpenIdConnectOptions
             {
                 AuthenticationScheme = "oidc",
                 SignInScheme = "Cookies",
-                Authority = identityUrl.ToString(),
-                PostLogoutRedirectUri = callBackUrl.ToString(), 
-                ClientId = "mvc",
+                Authority = identityUrl,
+                PostLogoutRedirectUri = callBackUrl,
                 ClientSecret = "secret",
-                ResponseType = "code id_token", 
+                ClientId = useLoadTest ? "mvctest" : "mvc",
+                ResponseType = useLoadTest ? "code id_token token" : "code id_token",
                 SaveTokens = true,
                 GetClaimsFromUserInfoEndpoint = true,
                 RequireHttpsMetadata = false,
-                Scope = { "openid", "profile", "orders", "basket" }
+                Scope = { "openid", "profile", "orders", "basket", "marketing", "locations" }
             };
+
+            //Seed Data
+            WebContextSeed.Seed(app, env, loggerFactory);
 
             //Wait untill identity service is ready on compose. 
             app.UseOpenIdConnectAuthentication(oidcOptions);
@@ -126,6 +145,10 @@ namespace Microsoft.eShopOnContainers.WebMVC
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Catalog}/{action=Index}/{id?}");
+
+                routes.MapRoute(
+                    name: "defaultError",
+                    template: "{controller=Error}/{action=Error}");
             });
         }
     }

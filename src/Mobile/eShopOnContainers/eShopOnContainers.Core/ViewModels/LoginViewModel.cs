@@ -188,7 +188,7 @@ namespace eShopOnContainers.Core.ViewModels
 
             await Task.Delay(500);
 
-            LoginUrl = _identityService.CreateAuthorizeRequest();
+            LoginUrl = _identityService.CreateAuthorizationRequest();
 
             IsValid = true;
             IsLogin = true;
@@ -203,20 +203,21 @@ namespace eShopOnContainers.Core.ViewModels
         private void Logout()
         {
             var authIdToken = Settings.AuthIdToken;
-
             var logoutRequest = _identityService.CreateLogoutRequest(authIdToken);
 
-            if(!string.IsNullOrEmpty(logoutRequest))
+            if (!string.IsNullOrEmpty(logoutRequest))
             {
                 // Logout
                 LoginUrl = logoutRequest;
             }
 
-            if(Settings.UseMocks)
+            if (Settings.UseMocks)
             {
                 Settings.AuthAccessToken = string.Empty;
-                Settings.AuthIdToken = string.Empty;
+                Settings.AuthIdToken = string.Empty; 
             }
+
+            Settings.UseFakeLocation = false;
         }
 
         private async Task NavigateAsync(string url)
@@ -228,19 +229,20 @@ namespace eShopOnContainers.Core.ViewModels
                 Settings.AuthAccessToken = string.Empty;
                 Settings.AuthIdToken = string.Empty;
                 IsLogin = false;
-                LoginUrl = _identityService.CreateAuthorizeRequest();
+                LoginUrl = _identityService.CreateAuthorizationRequest();
             }
             else if (unescapedUrl.Contains(GlobalSetting.Instance.IdentityCallback))
             {
                 var authResponse = new AuthorizeResponse(url);
-
-                if (!string.IsNullOrWhiteSpace(authResponse.AccessToken))
+                if (!string.IsNullOrWhiteSpace(authResponse.Code))
                 {
-                    if (authResponse.AccessToken != null)
-                    {
-                        Settings.AuthAccessToken = authResponse.AccessToken;
-                        Settings.AuthIdToken = authResponse.IdentityToken;
+                    var userToken = await _identityService.GetTokenAsync(authResponse.Code);
+                    string accessToken = userToken.AccessToken;
 
+                    if (!string.IsNullOrWhiteSpace(accessToken))
+                    {
+                        Settings.AuthAccessToken = accessToken;
+                        Settings.AuthIdToken = authResponse.IdentityToken;
                         await NavigationService.NavigateToAsync<MainViewModel>();
                         await NavigationService.RemoveLastFromBackStackAsync();
                     }

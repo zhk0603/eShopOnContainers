@@ -1,16 +1,17 @@
 ﻿using System;
+using System.IO;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.HealthChecks;
 using Newtonsoft.Json.Serialization;
 using eShopOnContainers.WebSPA;
-using Microsoft.Extensions.HealthChecks;
-using System.Threading.Tasks;
+using Microsoft.eShopOnContainers.BuildingBlocks;
+using WebSPA.Infrastructure;
 
 namespace eShopConContainers.WebSPA
 {
@@ -30,10 +31,13 @@ namespace eShopConContainers.WebSPA
             if (env.IsDevelopment())
             {
                 // For more details on using the user secret store see http://go.microsoft.com/fwlink/?LinkID=532709
-                builder.AddUserSecrets();
+                builder.AddUserSecrets<Startup>();
             }
 
             Configuration = builder.Build();
+
+            var localPath = new Uri(Configuration["ASPNETCORE_URLS"])?.LocalPath ?? "/";
+            Configuration["BaseUrl"] = localPath;
         }
 
         public static IConfigurationRoot Configuration { get; set;}
@@ -43,13 +47,29 @@ namespace eShopConContainers.WebSPA
         {
             services.AddHealthChecks(checks =>
             {
-                checks.AddUrlCheck(Configuration["CatalogUrl"]);
-                checks.AddUrlCheck(Configuration["OrderingUrl"]);
-                checks.AddUrlCheck(Configuration["BasketUrl"]);
-                checks.AddUrlCheck(Configuration["IdentityUrl"]);
+                var minutes = 1;
+                if (int.TryParse(Configuration["HealthCheck:Timeout"], out var minutesParsed))
+                {
+                    minutes = minutesParsed;
+                }
+
+                checks.AddUrlCheck(Configuration["CatalogUrlHC"], TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheck(Configuration["OrderingUrlHC"], TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheck(Configuration["BasketUrlHC"], TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheck(Configuration["IdentityUrlHC"], TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheck(Configuration["MarketingUrlHC"], TimeSpan.FromMinutes(minutes));
             });
 
             services.Configure<AppSettings>(Configuration);
+
+            if (Configuration.GetValue<string>("IsClusterEnv") == bool.TrueString)
+            {
+                services.AddDataProtection(opts =>
+                {
+                    opts.ApplicationDiscriminator = "eshop.webspa";
+                })
+                .PersistKeysToRedis(Configuration["DPConnectionString"]);
+            }
 
             services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
 
@@ -71,29 +91,37 @@ namespace eShopConContainers.WebSPA
 
             // Configure XSRF middleware, This pattern is for SPA style applications where XSRF token is added on Index page 
             // load and passed back token on every subsequent async request            
+            // app.Use(async (context, next) =>
+            // {
+            //     if (string.Equals(context.Request.Path.Value, "/", StringComparison.OrdinalIgnoreCase))
+            //     {
+            //         var tokens = antiforgery.GetAndStoreTokens(context);
+            //         context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken, new CookieOptions() { HttpOnly = false });
+            //     }
+            //     await next.Invoke();
+            // });
+
+            //Seed Data
+            WebContextSeed.Seed(app, env, loggerFactory);
+
             app.Use(async (context, next) =>
             {
-                if (string.Equals(context.Request.Path.Value, "/", StringComparison.OrdinalIgnoreCase))
+                await next();
+
+                // If there's no available file and the request doesn't contain an extension, we're probably trying to access a page.
+                // Rewrite request to use app root
+                if (context.Response.StatusCode == 404 && !Path.HasExtension(context.Request.Path.Value) && !context.Request.Path.Value.StartsWith("/api"))
                 {
-                    var tokens = antiforgery.GetAndStoreTokens(context);
-                    context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken, new CookieOptions() { HttpOnly = false });
+                    context.Request.Path = "/index.html"; 
+                    context.Response.StatusCode = 200; // Make sure we update the status code, otherwise it returns 404
+                    await next();
                 }
-                await next.Invoke();
             });
 
+            app.UseDefaultFiles();
             app.UseStaticFiles();
 
-  
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-
-                routes.MapSpaFallbackRoute(
-                    name: "spa-fallback",
-                    defaults: new { controller = "Home", action = "Index" });
-            });
+            app.UseMvcWithDefaultRoute();
         }
     }
 }

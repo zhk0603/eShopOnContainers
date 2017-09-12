@@ -32,12 +32,20 @@ namespace WebStatus
             // Add framework services.
             services.AddHealthChecks(checks =>
             {
-                checks.AddUrlCheckIfNotNull(Configuration["OrderingUrl"]);
-                checks.AddUrlCheckIfNotNull(Configuration["BasketUrl"]);
-                checks.AddUrlCheckIfNotNull(Configuration["CatalogUrl"]);
-                checks.AddUrlCheckIfNotNull(Configuration["IdentityUrl"]);
-                checks.AddUrlCheckIfNotNull(Configuration["mvc"]);
-                checks.AddUrlCheckIfNotNull(Configuration["spa"]); 
+                var minutes = 1;
+                if (int.TryParse(Configuration["HealthCheck:Timeout"], out var minutesParsed))
+                {
+                    minutes = minutesParsed;
+                }
+
+                checks.AddUrlCheckIfNotNull(Configuration["OrderingUrl"], TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheckIfNotNull(Configuration["BasketUrl"], TimeSpan.Zero); //No cache for this HealthCheck, better just for demos                  
+                checks.AddUrlCheckIfNotNull(Configuration["CatalogUrl"], TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheckIfNotNull(Configuration["IdentityUrl"], TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheckIfNotNull(Configuration["LocationsUrl"], TimeSpan.FromMinutes(minutes)); 
+                checks.AddUrlCheckIfNotNull(Configuration["MarketingUrl"], TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheckIfNotNull(Configuration["mvc"], TimeSpan.FromMinutes(minutes));
+                checks.AddUrlCheckIfNotNull(Configuration["spa"], TimeSpan.FromMinutes(minutes));
             });
             services.AddMvc();
         }
